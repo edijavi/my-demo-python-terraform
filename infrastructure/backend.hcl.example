@@ -1,4 +1,2 @@
 bucket = "my-terraform-state-bucket"
 prefix = "infra/dev"  # change to infra/prod for prod
-
-
