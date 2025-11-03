@@ -2,12 +2,11 @@
 Simple greeting web application for Just Eat interview demo.
 Returns a random greeting in different languages with visitor counter.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import random
 import pathlib
 
 app = FastAPI(title="Just Eat Greeting Service")
-counter = 0
 
 
 def load_languages(path: str = "languages.txt") -> list[str]:
@@ -40,26 +39,27 @@ def load_languages(path: str = "languages.txt") -> list[str]:
     return languages
 
 
-# Load languages at startup
-LANGS = load_languages()
+@app.on_event("startup")
+def startup_event() -> None:
+    app.state.languages = load_languages()
+    app.state.counter = 0
 
 
 @app.get("/")
-def root():
+async def root(request: Request):
     """
     Return a random greeting with visitor count.
     
     Returns:
         JSON response with greeting message
     """
-    global counter
-    counter += 1
-    greeting = random.choice(LANGS)
-    return {"message": f"{greeting} visitor number {counter}!"}
+    request.app.state.counter += 1
+    greeting = random.choice(request.app.state.languages)
+    return {"message": f"{greeting} visitor number {request.app.state.counter}!"}
 
 
 @app.get("/health")
-def health():
+async def health():
     """
     Health check endpoint.
     
