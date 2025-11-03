@@ -1,35 +1,69 @@
-# app.py
-from fastapi import FastAPI, HTTPException
-import random, pathlib
+"""
+Simple greeting web application for Just Eat interview demo.
+Returns a random greeting in different languages with visitor counter.
+"""
+from fastapi import FastAPI
+import random
+import pathlib
 
-app = FastAPI()
+app = FastAPI(title="Just Eat Greeting Service")
 counter = 0
 
-def load_langs(path="languages.txt"):
-    p = pathlib.Path(path)
+
+def load_languages(path: str = "languages.txt") -> list[str]:
+    """
+    Load greetings from a text file.
+    
+    Args:
+        path: Path to the languages file
+        
+    Returns:
+        List of greeting strings
+        
+    Raises:
+        RuntimeError: If file cannot be read or is empty
+    """
+    file_path = pathlib.Path(path)
     try:
-        lines = p.read_text(encoding="utf-8").splitlines()
+        lines = file_path.read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        raise RuntimeError(f"Language file not found: {path}")
     except Exception as e:
         raise RuntimeError(f"Cannot read {path}: {e}")
-    langs = [l.strip() for l in lines if isinstance(l, str) and l.strip()]
-    # Validación extra: sin None/valores no-str
-    if not langs or not all(isinstance(x, str) and x for x in langs):
-        raise RuntimeError("languages.txt está vacío o tiene valores no válidos.")
-    return langs
+    
+    # Filter out empty lines and strip whitespace
+    languages = [line.strip() for line in lines if line.strip()]
+    
+    if not languages:
+        raise RuntimeError("Language file is empty or contains no valid greetings.")
+    
+    return languages
 
-LANGS = load_langs()
+
+# Load languages at startup
+LANGS = load_languages()
+
 
 @app.get("/")
 def root():
+    """
+    Return a random greeting with visitor count.
+    
+    Returns:
+        JSON response with greeting message
+    """
     global counter
     counter += 1
-    try:
-        greeting = random.choice(LANGS)
-    except IndexError:
-        # No debería pasar por la validación, pero por si acaso
-        greeting = "Hello"
+    greeting = random.choice(LANGS)
     return {"message": f"{greeting} visitor number {counter}!"}
+
 
 @app.get("/health")
 def health():
+    """
+    Health check endpoint.
+    
+    Returns:
+        JSON response with status
+    """
     return {"status": "ok"}
