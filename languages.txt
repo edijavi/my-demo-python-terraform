@@ -1,3 +1,4 @@
+None
 Hola
 Bonjour
 Hallo
@@ -8,4 +9,3 @@ Zdravstvuyte
 Annyeonghaseyo
 Marhaban
 Olá
-
